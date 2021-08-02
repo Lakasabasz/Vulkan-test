@@ -21,6 +21,8 @@ private:
     std::vector<const char*> validationLayers;
     VkDebugUtilsMessengerEXT debugMessenger;
     VkPhysicalDevice physicalDevice;
+    VkDevice device;
+    VkQueue graphicsQueue;
 
     bool checkValidationLayerSupport();
     bool isDevicesSuitable(VkPhysicalDevice device);
@@ -41,6 +43,7 @@ private:
     void initVulkan();
     void setupDebugSender();
     void pickPhysicalDevice();
+    void createLogicalDevice();
     void createInstance();
     void mainLoop();
     void cleanup();
