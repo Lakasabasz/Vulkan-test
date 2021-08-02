@@ -10,6 +10,7 @@ AppVulkanCore::AppVulkanCore(int height, int width)
 #ifdef NDEBUG
     validationLayers.push_back("VK_LAYER_KHRONOS_validation");
 #endif
+    physicalDevice = VK_NULL_HANDLE;
 }
 
 void AppVulkanCore::run()
@@ -43,6 +44,12 @@ bool AppVulkanCore::checkValidationLayerSupport()
     }
 
     return true;
+}
+
+bool AppVulkanCore::isDevicesSuitable(VkPhysicalDevice device)
+{
+    auto indices = findQueueFamilies(device);
+    return indices.isComplete();
 }
 
 std::vector<const char *> AppVulkanCore::getRequiredExtensions()
@@ -94,6 +101,25 @@ VkResult AppVulkanCore::CreateDebugUtilsMessengerEXT(VkInstance instance, const 
     }
 }
 
+QueueFamilyIndices AppVulkanCore::findQueueFamilies(VkPhysicalDevice device)
+{
+    QueueFamilyIndices indices;
+    uint32_t queueFamiliCounter = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamiliCounter, nullptr);
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamiliCounter);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamiliCounter, queueFamilies.data());
+
+    int i=0;
+    for(const auto& queueFamily : queueFamilies){
+        if(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT){
+            indices.graphicsFamily = i;
+        }
+        if(indices.isComplete()) break;
+        i++;
+    }
+    return indices;
+}
+
 void AppVulkanCore::initWindow()
 {
     glfwInit();
@@ -106,6 +132,7 @@ void AppVulkanCore::initVulkan()
 {
     createInstance();
     setupDebugSender();
+    pickPhysicalDevice();
 }
 
 void AppVulkanCore::setupDebugSender()
@@ -117,6 +144,29 @@ void AppVulkanCore::setupDebugSender()
         throw std::runtime_error("Failed to set up debug messenger!");
     }
 
+}
+
+void AppVulkanCore::pickPhysicalDevice()
+{
+    uint32_t devicesCounter = 0;
+    vkEnumeratePhysicalDevices(vkInstance, &devicesCounter, nullptr);
+    if(devicesCounter == 0){
+        throw std::runtime_error("No Vulkan support devices!");
+    }
+
+    std::vector<VkPhysicalDevice> devices(devicesCounter);
+    vkEnumeratePhysicalDevices(vkInstance, &devicesCounter, devices.data());
+
+    for(const auto& device : devices){
+        if(isDevicesSuitable(device)){
+            physicalDevice = device;
+            break;
+        }
+    }
+
+    if(physicalDevice == VK_NULL_HANDLE){
+        throw std::runtime_error("No suitable GPU!");
+    }
 }
 
 void AppVulkanCore::createInstance()

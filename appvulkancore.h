@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include <vector>
+#include "structs.h"
 
 class AppVulkanCore
 {
@@ -19,8 +20,10 @@ private:
     VkInstance vkInstance;
     std::vector<const char*> validationLayers;
     VkDebugUtilsMessengerEXT debugMessenger;
+    VkPhysicalDevice physicalDevice;
 
     bool checkValidationLayerSupport();
+    bool isDevicesSuitable(VkPhysicalDevice device);
     std::vector<const char*> getRequiredExtensions();
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -32,9 +35,12 @@ private:
 
     VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
 
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+
     void initWindow();
     void initVulkan();
     void setupDebugSender();
+    void pickPhysicalDevice();
     void createInstance();
     void mainLoop();
     void cleanup();
