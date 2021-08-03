@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <cstring>
+#include <set>
 
 AppVulkanCore::AppVulkanCore(int height, int width)
 {
@@ -11,6 +12,7 @@ AppVulkanCore::AppVulkanCore(int height, int width)
     validationLayers.push_back("VK_LAYER_KHRONOS_validation");
 #endif
     physicalDevice = VK_NULL_HANDLE;
+    deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 }
 
 void AppVulkanCore::run()
@@ -49,7 +51,23 @@ bool AppVulkanCore::checkValidationLayerSupport()
 bool AppVulkanCore::isDevicesSuitable(VkPhysicalDevice device)
 {
     auto indices = findQueueFamilies(device);
-    return indices.isComplete();
+    return indices.isComplete() && checkDeviceExtensionsSupport(device);
+}
+
+bool AppVulkanCore::checkDeviceExtensionsSupport(VkPhysicalDevice device)
+{
+    uint32_t extensionsCount = 0;
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionsCount, nullptr);
+
+    std::vector<VkExtensionProperties> availableExtensions(extensionsCount);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionsCount, availableExtensions.data());
+
+    std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+    for(const auto& ext : availableExtensions){
+        requiredExtensions.erase(ext.extensionName);
+    }
+
+    return requiredExtensions.empty();
 }
 
 std::vector<const char *> AppVulkanCore::getRequiredExtensions()
@@ -114,10 +132,69 @@ QueueFamilyIndices AppVulkanCore::findQueueFamilies(VkPhysicalDevice device)
         if(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT){
             indices.graphicsFamily = i;
         }
+
+        VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+        if(presentSupport) indices.presentFamily = i;
+
         if(indices.isComplete()) break;
         i++;
     }
     return indices;
+}
+
+SwapChainSupportDetails AppVulkanCore::querySwapChainSupport(VkPhysicalDevice device)
+{
+    SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
+
+    VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+    VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
+    VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
+
+    uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+    if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
+        imageCount = swapChainSupport.capabilities.maxImageCount;
+    }
+
+    VkSwapchainCreateInfoKHR createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    createInfo.surface = surface;
+
+    createInfo.minImageCount = imageCount;
+    createInfo.imageFormat = surfaceFormat.format;
+    createInfo.imageColorSpace = surfaceFormat.colorSpace;
+    createInfo.imageExtent = extent;
+    createInfo.imageArrayLayers = 1;
+    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+    uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+
+    if (indices.graphicsFamily != indices.presentFamily) {
+        createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        createInfo.queueFamilyIndexCount = 2;
+        createInfo.pQueueFamilyIndices = queueFamilyIndices;
+    } else {
+        createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    }
+
+    createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+    createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    createInfo.presentMode = presentMode;
+    createInfo.clipped = VK_TRUE;
+
+    createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+    if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create swap chain!");
+    }
+
+    vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
+    swapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
+
+    swapChainImageFormat = surfaceFormat.format;
+    swapChainExtent = extent;
 }
 
 void AppVulkanCore::initWindow()
@@ -132,7 +209,9 @@ void AppVulkanCore::initVulkan()
 {
     createInstance();
     setupDebugSender();
+    createSurface();
     pickPhysicalDevice();
+    createLogicalDevice();
 }
 
 void AppVulkanCore::setupDebugSender()
@@ -142,6 +221,13 @@ void AppVulkanCore::setupDebugSender()
 
     if(CreateDebugUtilsMessengerEXT(vkInstance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS){
         throw std::runtime_error("Failed to set up debug messenger!");
+    }
+}
+
+void AppVulkanCore::createSurface()
+{
+    if(glfwCreateWindowSurface(vkInstance, window, nullptr, &surface) != VK_SUCCESS){
+        throw std::runtime_error("Failed to create window surface!");
     }
 
 }
@@ -172,21 +258,29 @@ void AppVulkanCore::pickPhysicalDevice()
 void AppVulkanCore::createLogicalDevice()
 {
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-    VkDeviceQueueCreateInfo queueCreateInfo;
-    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-    queueCreateInfo.queueCount = 1;
+
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+
     float queuePriority = 1.0f;
-    queueCreateInfo.pQueuePriorities = &queuePriority;
+    for(uint32_t queueFamily : uniqueQueueFamilies){
+        VkDeviceQueueCreateInfo queueCreateInfo;
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = queueFamily;
+        queueCreateInfo.queueCount = 1;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+        queueCreateInfos.push_back(queueCreateInfo);
+    }
 
     VkPhysicalDeviceFeatures deviceFeatures{};
 
     VkDeviceCreateInfo createInfo;
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.pQueueCreateInfos = &queueCreateInfo;
-    createInfo.queueCreateInfoCount = 1;
+    createInfo.pQueueCreateInfos = queueCreateInfos.data();
+    createInfo.queueCreateInfoCount = queueCreateInfos.size();
     createInfo.pEnabledFeatures = &deviceFeatures;
-    createInfo.enabledExtensionCount = 0;
+    createInfo.enabledExtensionCount = deviceExtensions.size();
+    createInfo.ppEnabledExtensionNames = deviceExtensions.data();
     if(validationLayers.size() != 0){
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
         createInfo.ppEnabledLayerNames = validationLayers.data();
@@ -199,6 +293,7 @@ void AppVulkanCore::createLogicalDevice()
     }
 
     vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+    vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 
 }
 
@@ -257,6 +352,7 @@ void AppVulkanCore::cleanup()
         DestroyDebugUtilsMessengerEXT(vkInstance, debugMessenger, nullptr);
     }
 
+    vkDestroySurfaceKHR(vkInstance, surface, nullptr);
     vkDestroyInstance(vkInstance, nullptr);
     glfwDestroyWindow(window);
     glfwTerminate();

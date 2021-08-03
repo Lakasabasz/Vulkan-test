@@ -1,7 +1,6 @@
 #ifndef APPVULKANCORE_H
 #define APPVULKANCORE_H
 
-
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -19,13 +18,17 @@ private:
     GLFWwindow* window;
     VkInstance vkInstance;
     std::vector<const char*> validationLayers;
+    std::vector<const char*> deviceExtensions;
     VkDebugUtilsMessengerEXT debugMessenger;
     VkPhysicalDevice physicalDevice;
     VkDevice device;
     VkQueue graphicsQueue;
+    VkQueue presentQueue;
+    VkSurfaceKHR surface;
 
     bool checkValidationLayerSupport();
     bool isDevicesSuitable(VkPhysicalDevice device);
+    bool checkDeviceExtensionsSupport(VkPhysicalDevice device);
     std::vector<const char*> getRequiredExtensions();
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -38,10 +41,12 @@ private:
     VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
 
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 
     void initWindow();
     void initVulkan();
     void setupDebugSender();
+    void createSurface();
     void pickPhysicalDevice();
     void createLogicalDevice();
     void createInstance();
