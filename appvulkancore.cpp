@@ -228,7 +228,7 @@ void AppVulkanCore::initVulkan()
     createSurface();
     pickPhysicalDevice();
     createLogicalDevice();
-    //createSwapChain();
+    createSwapChain();
 }
 
 void AppVulkanCore::setupDebugSender()
