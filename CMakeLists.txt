@@ -9,14 +9,12 @@ add_executable(vulkan-zabawa main.cpp
     appvulkancore.h appvulkancore.cpp
     structs.h)
 
-
 find_package(Vulkan REQUIRED)
 target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)
 
 find_package(glm CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} glm::glm)
-
 
 find_package(glfw3 REQUIRED)
 target_link_libraries(${PROJECT_NAME} glfw)
@@ -26,5 +24,11 @@ target_include_directories(tutorial3 PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(tutorial3 Vulkan::Vulkan)
 target_link_libraries(tutorial3 glm::glm)
 target_link_libraries(tutorial3 glfw)
+
+add_executable(tutorial4 tutorial/tutorial4.cpp)
+target_include_directories(tutorial4 PUBLIC ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(tutorial4 Vulkan::Vulkan)
+target_link_libraries(tutorial4 glm::glm)
+target_link_libraries(tutorial4 glfw)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNDEBUG")

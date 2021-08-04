@@ -281,7 +281,7 @@ void AppVulkanCore::createLogicalDevice()
 
     float queuePriority = 1.0f;
     for(uint32_t queueFamily : uniqueQueueFamilies){
-        VkDeviceQueueCreateInfo queueCreateInfo;
+        VkDeviceQueueCreateInfo queueCreateInfo{};
         queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queueCreateInfo.queueFamilyIndex = queueFamily;
         queueCreateInfo.queueCount = 1;
@@ -291,7 +291,7 @@ void AppVulkanCore::createLogicalDevice()
 
     VkPhysicalDeviceFeatures deviceFeatures{};
 
-    VkDeviceCreateInfo createInfo;
+    VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.queueCreateInfoCount = queueCreateInfos.size();
@@ -305,6 +305,9 @@ void AppVulkanCore::createLogicalDevice()
         createInfo.enabledLayerCount = 0;
     }
 
+    if(physicalDevice == nullptr) {
+        throw std::runtime_error("Co do kurwy?");
+    }
     if(vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS){
         throw std::runtime_error("Failed to create logical device");
     }
