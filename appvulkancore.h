@@ -25,6 +25,7 @@ private:
     VkQueue graphicsQueue;
     VkQueue presentQueue;
     VkSurfaceKHR surface;
+    VkSwapchainKHR swapChain;
 
     bool checkValidationLayerSupport();
     bool isDevicesSuitable(VkPhysicalDevice device);
@@ -43,12 +44,17 @@ private:
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+    VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availableModes);
+    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+
     void initWindow();
     void initVulkan();
     void setupDebugSender();
     void createSurface();
     void pickPhysicalDevice();
     void createLogicalDevice();
+    void createSwapChain();
     void createInstance();
     void mainLoop();
     void cleanup();
