@@ -19,6 +19,8 @@ private:
     VkInstance vkInstance;
     std::vector<const char*> validationLayers;
     std::vector<const char*> deviceExtensions;
+    std::vector<VkImage> swapChainImages;
+    std::vector<VkImageView> swapChainImageViews;
     VkDebugUtilsMessengerEXT debugMessenger;
     VkPhysicalDevice physicalDevice;
     VkDevice device;
@@ -26,11 +28,13 @@ private:
     VkQueue presentQueue;
     VkSurfaceKHR surface;
     VkSwapchainKHR swapChain;
+    VkFormat swapChainImageFormat;
+    VkExtent2D swapChainImageExtent;
 
     bool checkValidationLayerSupport();
     bool isDevicesSuitable(VkPhysicalDevice device);
     bool checkDeviceExtensionsSupport(VkPhysicalDevice device);
-    std::vector<const char*> getRequiredExtensions();
+    std::vector<const char*> getRequiredExtensions();    
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                                         VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -48,6 +52,13 @@ private:
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availableModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
+    std::vector<char> readFile(const std::string& filename){
+        std::ifstream file(filename, std::ios::ate | std::ios::binary);
+        if(!file.is_open()){
+            throw std::runtime_error("Failed to open file!");
+        }
+    }
+
     void initWindow();
     void initVulkan();
     void setupDebugSender();
@@ -55,6 +66,8 @@ private:
     void pickPhysicalDevice();
     void createLogicalDevice();
     void createSwapChain();
+    void createImageViews();
+    void createGraphicsPipeline();
     void createInstance();
     void mainLoop();
     void cleanup();
