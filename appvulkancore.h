@@ -21,6 +21,8 @@ private:
     std::vector<const char*> deviceExtensions;
     std::vector<VkImage> swapChainImages;
     std::vector<VkImageView> swapChainImageViews;
+    std::vector<VkFramebuffer> swapChainFramebuffers;
+    std::vector<VkCommandBuffer> commandBuffers;
     VkDebugUtilsMessengerEXT debugMessenger;
     VkPhysicalDevice physicalDevice;
     VkDevice device;
@@ -30,6 +32,13 @@ private:
     VkSwapchainKHR swapChain;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainImageExtent;
+    VkRenderPass renderPass;
+    VkPipelineLayout pipelineLayout;
+    VkPipeline graphicsPipeline;
+    VkCommandPool commandPool;
+
+    VkSemaphore imageAvailableSemaphore;
+    VkSemaphore renderFinishedSemaphore;
 
     bool checkValidationLayerSupport();
     bool isDevicesSuitable(VkPhysicalDevice device);
@@ -52,12 +61,8 @@ private:
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availableModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
-    std::vector<char> readFile(const std::string& filename){
-        std::ifstream file(filename, std::ios::ate | std::ios::binary);
-        if(!file.is_open()){
-            throw std::runtime_error("Failed to open file!");
-        }
-    }
+    std::vector<char> readFile(const std::string& filename);
+    VkShaderModule createShaderModule(const std::vector<char>& code);
 
     void initWindow();
     void initVulkan();
@@ -67,10 +72,17 @@ private:
     void createLogicalDevice();
     void createSwapChain();
     void createImageViews();
+    void createRenderPass();
     void createGraphicsPipeline();
+    void createFramebuffer();
+    void createCommandPool();
+    void createCommandBuffers();
+    void createSemaphores();
     void createInstance();
     void mainLoop();
     void cleanup();
+
+    void drawFrame();
 };
 
 #endif // APPVULKANCORE_H
