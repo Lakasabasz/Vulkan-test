@@ -292,6 +292,7 @@ void AppVulkanCore::initVulkan()
     createGraphicsPipeline();
     createFramebuffer();
     createCommandPool();
+    createVertexBuffers();
     createCommandBuffers();
     createSyncObjects();
 }
@@ -737,9 +738,9 @@ void AppVulkanCore::createCommandBuffers()
 
         VkBuffer vertexBuffers[] = {vertexBuffer};
         VkDeviceSize offsets[] = {0};
-        //vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
+        vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 
-        //vkCmdDraw(commandBuffers[i], static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        vkCmdDraw(commandBuffers[i], vertices.size(), 1, 0, 0);
         //vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
 
         vkCmdEndRenderPass(commandBuffers[i]);
