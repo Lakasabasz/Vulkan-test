@@ -13,6 +13,8 @@ public:
     AppVulkanCore(int height, int width);
     void run();
 private:
+    const int MAX_FRAMES_IN_FLIGHT = 2;
+
     int height;
     int width;
     GLFWwindow* window;
@@ -37,8 +39,13 @@ private:
     VkPipeline graphicsPipeline;
     VkCommandPool commandPool;
 
-    VkSemaphore imageAvailableSemaphore;
-    VkSemaphore renderFinishedSemaphore;
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkFence> inFlightFences;
+    std::vector<VkFence> imagesInFlight;
+    size_t currentFrame = 0;
+
+    bool framebufferResized = false;
 
     bool checkValidationLayerSupport();
     bool isDevicesSuitable(VkPhysicalDevice device);
@@ -52,6 +59,8 @@ private:
     static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 
+    static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
+
     VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
 
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
@@ -63,6 +72,8 @@ private:
 
     std::vector<char> readFile(const std::string& filename);
     VkShaderModule createShaderModule(const std::vector<char>& code);
+
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     void initWindow();
     void initVulkan();
@@ -76,13 +87,22 @@ private:
     void createGraphicsPipeline();
     void createFramebuffer();
     void createCommandPool();
+    void createVertexBuffers();
     void createCommandBuffers();
-    void createSemaphores();
+    void createSyncObjects();
     void createInstance();
+    void recreateSwapChain();
     void mainLoop();
     void cleanup();
+    void cleanupSwapChain();
 
     void drawFrame();
+
+
+    // Draw data
+    std::vector<Vertex> vertices;
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
 };
 
 #endif // APPVULKANCORE_H
