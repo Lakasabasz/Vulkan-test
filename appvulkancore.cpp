@@ -741,7 +741,6 @@ void AppVulkanCore::createCommandBuffers()
         vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 
         vkCmdDraw(commandBuffers[i], vertices.size(), 1, 0, 0);
-        //vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
 
         vkCmdEndRenderPass(commandBuffers[i]);
         if(vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS){
@@ -762,13 +761,12 @@ void AppVulkanCore::createSyncObjects()
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-    imagesInFlight.resize(MAX_FRAMES_IN_FLIGHT);
+    imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
 
     for(size_t i = 0; i<MAX_FRAMES_IN_FLIGHT; i++){
         if(vkCreateSemaphore(device, &semCreateInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
                 vkCreateSemaphore(device, &semCreateInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-                vkCreateFence(device, &fencCreateInfo, nullptr, &inFlightFences[i]) ||
-                vkCreateFence(device, &fencCreateInfo, nullptr, &imagesInFlight[i])){
+                vkCreateFence(device, &fencCreateInfo, nullptr, &inFlightFences[i])){
             throw std::runtime_error("Failed to create sync objects!");
         }
     }
@@ -850,7 +848,6 @@ void AppVulkanCore::cleanup()
         vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
         vkDestroyFence(device, inFlightFences[i], nullptr);
-        vkDestroyFence(device, imagesInFlight[i], nullptr);
     }
     vkDestroyCommandPool(device, commandPool, nullptr);
 
@@ -916,10 +913,10 @@ void AppVulkanCore::drawFrame()
         throw std::runtime_error("Failed to acquire swap chain image!");
     }
 
-    if(imagesInFlight[currentFrame] != VK_NULL_HANDLE){
-        vkWaitForFences(device, 1, &imagesInFlight[currentFrame], VK_TRUE, UINT64_MAX);
+    if(imagesInFlight[imageIndex] != VK_NULL_HANDLE){
+        vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
     }
-    imagesInFlight[currentFrame] = inFlightFences[currentFrame];
+    imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
