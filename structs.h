@@ -65,6 +65,7 @@ struct Vertex{
         attribDescs[1].location = 2;
         attribDescs[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
         attribDescs[1].offset = offsetof(Vertex, color);
+        return attribDescs;
     }
 };
 

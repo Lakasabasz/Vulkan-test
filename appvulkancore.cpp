@@ -16,7 +16,7 @@ AppVulkanCore::AppVulkanCore(int height, int width)
     physicalDevice = VK_NULL_HANDLE;
     deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
-    vertices = {Vertex({0, -0.5, 0}, {1, 0, 0}),
+    vertices = {Vertex({0.0f, -0.5, 0}, {1, 0, 0}),
                 Vertex({0.5, 0.5, 0}, {0, 1, 0}),
                 Vertex({-0.5, 0.5, 0}, {0, 0, 1})};
 }
@@ -530,14 +530,14 @@ void AppVulkanCore::createGraphicsPipeline()
     auto attribs = Vertex::getAttributeDescription();
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    /*vertexInputInfo.vertexBindingDescriptionCount = 1;
+    vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.pVertexBindingDescriptions = &binding;
     vertexInputInfo.vertexAttributeDescriptionCount = attribs.size();
     vertexInputInfo.pVertexAttributeDescriptions = attribs.data();//*/
-    vertexInputInfo.vertexBindingDescriptionCount = 0;
+    /*vertexInputInfo.vertexBindingDescriptionCount = 0;
     vertexInputInfo.vertexAttributeDescriptionCount = 0;
     vertexInputInfo.pVertexAttributeDescriptions = nullptr;
-    vertexInputInfo.pVertexBindingDescriptions = nullptr;
+    vertexInputInfo.pVertexBindingDescriptions = nullptr;//*/
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -739,7 +739,8 @@ void AppVulkanCore::createCommandBuffers()
         VkDeviceSize offsets[] = {0};
         //vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 
-        vkCmdDraw(commandBuffers[i], static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        //vkCmdDraw(commandBuffers[i], static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        //vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
 
         vkCmdEndRenderPass(commandBuffers[i]);
         if(vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS){
