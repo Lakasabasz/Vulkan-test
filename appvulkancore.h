@@ -92,6 +92,7 @@ private:
     void createFramebuffer();
     void createCommandPool();
     void createVertexBuffers();
+    void createIndexBuffers();
     void createCommandBuffers();
     void createSyncObjects();
     void createInstance();
@@ -105,8 +106,11 @@ private:
 
     // Draw data
     std::vector<Vertex> vertices;
+    std::vector<uint16_t> indices;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
 };
 
 #endif // APPVULKANCORE_H
