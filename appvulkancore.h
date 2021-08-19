@@ -77,6 +77,8 @@ private:
 
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 
+    void copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size);
+
     void initWindow();
     void initVulkan();
     void setupDebugSender();
