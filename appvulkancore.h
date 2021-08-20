@@ -36,6 +36,7 @@ private:
     VkExtent2D swapChainImageExtent;
     VkRenderPass renderPass;
     VkDescriptorSetLayout descriptorSetLayout;
+    VkDescriptorPool descriptorPool;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
     VkCommandPool commandPool;
@@ -96,6 +97,7 @@ private:
     void createVertexBuffers();
     void createIndexBuffers();
     void createUniformBuffers();
+    void createDescriptorPool();
     void createCommandBuffers();
     void createSyncObjects();
     void createInstance();

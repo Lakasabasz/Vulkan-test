@@ -362,6 +362,7 @@ void AppVulkanCore::initVulkan()
     createVertexBuffers();
     createIndexBuffers();
     createUniformBuffers();
+    createDescriptorPool();
     createCommandBuffers();
     createSyncObjects();
 }
@@ -801,6 +802,23 @@ void AppVulkanCore::createUniformBuffers()
     }
 }
 
+void AppVulkanCore::createDescriptorPool()
+{
+    VkDescriptorPoolSize poolSize{};
+    poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSize.descriptorCount = swapChainImages.size();
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = 1;
+    poolInfo.pPoolSizes = &poolSize;
+    poolInfo.maxSets = swapChainImages.size();
+
+    if(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS){
+        throw std::runtime_error("Failed to create descriptor pool");
+    }
+}
+
 void AppVulkanCore::createCommandBuffers()
 {
     commandBuffers.resize(swapChainFramebuffers.size());
@@ -933,6 +951,7 @@ void AppVulkanCore::recreateSwapChain()
     createGraphicsPipeline();
     createFramebuffer();
     createUniformBuffers();
+    createDescriptorPool();
     createCommandBuffers();
 }
 
@@ -1000,6 +1019,8 @@ void AppVulkanCore::cleanupSwapChain()
         vkDestroyBuffer(device, uniformBuffers[i], nullptr);
         vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
     }
+
+    vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 }
 
 void AppVulkanCore::drawFrame()
