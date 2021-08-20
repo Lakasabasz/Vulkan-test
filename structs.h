@@ -69,4 +69,10 @@ struct Vertex{
     }
 };
 
+struct UniformBufferObject{
+    glm::mat4 scene;
+    glm::mat4 camera;
+    glm::mat4 proj;
+};
+
 #endif // STRUCTS_H

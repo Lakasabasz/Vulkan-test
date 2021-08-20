@@ -35,6 +35,7 @@ private:
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainImageExtent;
     VkRenderPass renderPass;
+    VkDescriptorSetLayout descriptorSetLayout;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
     VkCommandPool commandPool;
@@ -88,6 +89,7 @@ private:
     void createSwapChain();
     void createImageViews();
     void createRenderPass();
+    void createDescriptorSetLayout();
     void createGraphicsPipeline();
     void createFramebuffer();
     void createCommandPool();
