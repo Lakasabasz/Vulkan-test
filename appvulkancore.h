@@ -95,6 +95,7 @@ private:
     void createCommandPool();
     void createVertexBuffers();
     void createIndexBuffers();
+    void createUniformBuffers();
     void createCommandBuffers();
     void createSyncObjects();
     void createInstance();
@@ -113,6 +114,8 @@ private:
     VkDeviceMemory vertexBufferMemory;
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
+    std::vector<VkBuffer> uniformBuffers;
+    std::vector<VkDeviceMemory> uniformBuffersMemory;
 };
 
 #endif // APPVULKANCORE_H

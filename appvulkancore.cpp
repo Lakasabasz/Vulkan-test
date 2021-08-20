@@ -359,6 +359,7 @@ void AppVulkanCore::initVulkan()
     createCommandPool();
     createVertexBuffers();
     createIndexBuffers();
+    createUniformBuffers();
     createCommandBuffers();
     createSyncObjects();
 }
@@ -791,6 +792,17 @@ void AppVulkanCore::createIndexBuffers()
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
+void AppVulkanCore::createUniformBuffers()
+{
+    VkDeviceSize bufferSize = sizeof (UniformBufferObject);
+    uniformBuffers.resize(swapChainImages.size());
+    uniformBuffersMemory.resize(swapChainImages.size());
+
+    for(auto i = 0; i < swapChainImages.size(); i++){
+        createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
+    }
+}
+
 void AppVulkanCore::createCommandBuffers()
 {
     commandBuffers.resize(swapChainFramebuffers.size());
@@ -922,6 +934,7 @@ void AppVulkanCore::recreateSwapChain()
     createRenderPass();
     createGraphicsPipeline();
     createFramebuffer();
+    createUniformBuffers();
     createCommandBuffers();
 }
 
@@ -984,6 +997,11 @@ void AppVulkanCore::cleanupSwapChain()
     }
 
     vkDestroySwapchainKHR(device, swapChain, nullptr);
+
+    for(size_t i = 0; i<swapChainImages.size(); i++){
+        vkDestroyBuffer(device, uniformBuffers[i], nullptr);
+        vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+    }
 }
 
 void AppVulkanCore::drawFrame()
