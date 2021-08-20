@@ -657,7 +657,7 @@ void AppVulkanCore::createGraphicsPipeline()
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisampling{};
@@ -896,6 +896,8 @@ void AppVulkanCore::createCommandBuffers()
 
         vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
+        vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
+
         vkCmdDrawIndexed(commandBuffers[i], indices.size(), 1, 0, 0, 0);
 
         vkCmdEndRenderPass(commandBuffers[i]);
@@ -1133,7 +1135,7 @@ void AppVulkanCore::updateUniformBuffer(uint32_t currentImage)
     float time = (currentTime - startTime).count();
 
     UniformBufferObject ubo{};
-    ubo.scene = glm::rotate(glm::mat4(1.0), time * glm::radians(90.0f), glm::vec3(0, 0, 1));
+    ubo.scene = glm::rotate(glm::mat4(1.0), time * glm::radians(0.0000001f), glm::vec3(0, 0, 1));
     ubo.camera = glm::lookAt(glm::vec3(2,2,2), glm::vec3(0, 0, 0), glm::vec3(0, 0, 1));
     ubo.proj = glm::perspective(glm::radians(45.0), swapChainImageExtent.width * 1.0 / swapChainImageExtent.height, 0.1, 10.0);
     ubo.proj[1][1] *= -1;
