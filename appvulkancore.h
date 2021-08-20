@@ -25,6 +25,7 @@ private:
     std::vector<VkImageView> swapChainImageViews;
     std::vector<VkFramebuffer> swapChainFramebuffers;
     std::vector<VkCommandBuffer> commandBuffers;
+    std::vector<VkDescriptorSet> descriptorSets;
     VkDebugUtilsMessengerEXT debugMessenger;
     VkPhysicalDevice physicalDevice;
     VkDevice device;
@@ -98,6 +99,7 @@ private:
     void createIndexBuffers();
     void createUniformBuffers();
     void createDescriptorPool();
+    void createDescriprorSets();
     void createCommandBuffers();
     void createSyncObjects();
     void createInstance();
