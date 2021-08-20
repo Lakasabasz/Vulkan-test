@@ -105,6 +105,7 @@ private:
     void cleanupSwapChain();
 
     void drawFrame();
+    void updateUniformBuffer(uint32_t currentImage);
 
 
     // Draw data

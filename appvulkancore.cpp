@@ -5,6 +5,8 @@
 #include <set>
 #include <algorithm>
 #include <fstream>
+#include <chrono>
+#include <glm/gtc/matrix_transform.hpp>
 
 AppVulkanCore::AppVulkanCore(int height, int width)
 {
@@ -576,10 +578,10 @@ void AppVulkanCore::createDescriptorSetLayout()
 {
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.binding = 0;
-    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     uboLayoutBinding.descriptorCount = 1;
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     uboLayoutBinding.pImmutableSamplers = nullptr;
+    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -620,11 +622,7 @@ void AppVulkanCore::createGraphicsPipeline()
     vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.pVertexBindingDescriptions = &binding;
     vertexInputInfo.vertexAttributeDescriptionCount = attribs.size();
-    vertexInputInfo.pVertexAttributeDescriptions = attribs.data();//*/
-    /*vertexInputInfo.vertexBindingDescriptionCount = 0;
-    vertexInputInfo.vertexAttributeDescriptionCount = 0;
-    vertexInputInfo.pVertexAttributeDescriptions = nullptr;
-    vertexInputInfo.pVertexBindingDescriptions = nullptr;//*/
+    vertexInputInfo.pVertexAttributeDescriptions = attribs.data();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -1022,6 +1020,8 @@ void AppVulkanCore::drawFrame()
     }
     imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 
+    updateUniformBuffer(imageIndex);
+
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -1067,4 +1067,23 @@ void AppVulkanCore::drawFrame()
 
     currentFrame++;
     currentFrame %= MAX_FRAMES_IN_FLIGHT;
+}
+
+void AppVulkanCore::updateUniformBuffer(uint32_t currentImage)
+{
+    static auto startTime = std::chrono::high_resolution_clock::now();
+
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = (currentTime - startTime).count();
+
+    UniformBufferObject ubo{};
+    ubo.scene = glm::rotate(glm::mat4(1.0), time * glm::radians(90.0f), glm::vec3(0, 0, 1));
+    ubo.camera = glm::lookAt(glm::vec3(2,2,2), glm::vec3(0, 0, 0), glm::vec3(0, 0, 1));
+    ubo.proj = glm::perspective(glm::radians(45.0), swapChainImageExtent.width * 1.0 / swapChainImageExtent.height, 0.1, 10.0);
+    ubo.proj[1][1] *= -1;
+
+    void* data;
+    vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof (ubo), 0, &data);
+    memcpy(data, &ubo, sizeof(ubo));
+    vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
 }
