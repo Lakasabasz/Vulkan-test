@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(vulkan-zabawa main.cpp
     appvulkancore.h appvulkancore.cpp
+    aktor.h aktor.cpp
     structs.h
     shader/base.vert shader/base.frag)
 
